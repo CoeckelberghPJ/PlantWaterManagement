@@ -3,6 +3,7 @@
 
 #define soilHumidiySensorPower 7
 #define soilHumidiySensorPin A0
+#define minimumSouldHumidityLevel 600
 
 #define temperatureSensorPin 2
 #define DHTTYPE DHT11
@@ -13,6 +14,9 @@
 
 #define maxAirHumidity 70
 #define minAirHumidity 60
+
+#define waterPumpRelayPin 9
+
 
 DHT dht(temperatureSensorPin, DHTTYPE);
  
@@ -26,11 +30,17 @@ void setup() {
  initHumiditySensor();
  initTemperatureSensor();
  initServo(servo);
+ initWaterPump();
  Serial.begin(9600);
  }
 
 void loop() {
  if (loopCounter = 0){ //Read soil humidity every +- 1 hour to prevent oxidation of the sensor
+  soilHumiditySensorValue = getSoilHumiditySensorValue();
+ }
+ 
+ if (soilHumiditySensorValue < minimumSouldHumidityLevel) {
+  pumpWater();
   soilHumiditySensorValue = getSoilHumiditySensorValue();
  }
 
@@ -111,6 +121,12 @@ int getTemperatureSensorValue(){
   return sensorValue;
 }
 
+void pumpWater() {
+  digitalWrite(waterPumpRelayPin,HIGH);
+  delayM(0.05);
+  digitalWrite(waterPumpRelayPin,LOW);
+}
+
 void initHumiditySensor(){
   pinMode(soilHumidiySensorPower, OUTPUT);
   digitalWrite(soilHumidiySensorPower, LOW);
@@ -125,6 +141,11 @@ void initServo(Servo s) {
   
   servoAngle = openVents(servoAngle);
   servoAngle = closeVents(servoAngle);
+}
+
+void initWaterPump(){
+  pinMode(waterPumpRelayPin, OUTPUT);
+  digitalWrite(waterPumpRelayPin,LOW);
 }
 
 void delayM(double value){
